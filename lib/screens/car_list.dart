@@ -9,8 +9,6 @@ class CarList extends StatefulWidget {
 class _CarListPageState extends State<CarList> {
   bool _isLoading = true;
   List<dynamic> _cars = [];
-  
-  String get token => null;
 
   @override
   void initState() {
@@ -19,20 +17,22 @@ class _CarListPageState extends State<CarList> {
   }
 
   void _loadCars() async {
-    try {
-      CarService carService = CarService();
-      final cars = await carService.getCarList(token);
-      setState(() {
-        _cars = cars;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+  try {
+    CarService carService = CarService();
+    final cars = await carService.getCarList(); // Llamada al servicio para obtener la lista de carros
+    setState(() {
+      _cars = cars;
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

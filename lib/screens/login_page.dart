@@ -12,33 +12,34 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  void _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+ void _login() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      AuthService authService = AuthService();
-      final result = await authService.login(
-        _emailController.text,
-        _passwordController.text,
-      );
-      if (result.containsKey('token')) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => CarList()), // Redirigir a la página de autos
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Usuario o contraseña incorrectos')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  try {
+    AuthService authService = AuthService();
+    await authService.login(
+      _emailController.text,
+      _passwordController.text,
+    );
+
+    // Si el login es exitoso, redirigir a la página de autos
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => CarList()),
+    );
+  } catch (e) {
+    // Mostrar un mensaje de error si ocurre algún problema
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
