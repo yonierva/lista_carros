@@ -17,22 +17,22 @@ class _CarListPageState extends State<CarList> {
   }
 
   void _loadCars() async {
-  try {
-    CarService carService = CarService();
-    final cars = await carService.getCarList(); // Llamada al servicio para obtener la lista de carros
-    setState(() {
-      _cars = cars;
-      _isLoading = false;
-    });
-  } catch (e) {
-    setState(() {
-      _isLoading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $e')),
-    );
+    try {
+      CarService carService = CarService();
+      final cars = await carService.getCarList(); // Llamada al servicio para obtener la lista de carros
+      setState(() {
+        _cars = cars;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +45,11 @@ class _CarListPageState extends State<CarList> {
               itemBuilder: (context, index) {
                 final car = _cars[index];
                 return ListTile(
-                  title: Text(car['name']),
-                  subtitle: Text(car['brand']),
+                  leading: car['imagen'] != null
+                      ? Image.network(car['imagen'], width: 50, height: 50, fit: BoxFit.cover)
+                      : Icon(Icons.directions_car), // Icono predeterminado si no hay imagen
+                  title: Text(car['conductor'] ?? 'Conductor no disponible'),
+                  subtitle: Text(car['placa'] ?? 'Placa no disponible'),
                 );
               },
             ),

@@ -3,35 +3,15 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CarService {
-  final String apiUrl = 'https://carros-electricos.wiremockapi.cloud/carros';
+  final String _baseUrl = 'https://67f7d1812466325443eadd17.mockapi.io/carros';
 
   Future<List<dynamic>> getCarList() async {
-    try {
-      // Recuperar el token de SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('auth_token');
+    final response = await http.get(Uri.parse(_baseUrl));
 
-      if (token == null) {
-        throw Exception('No se encontró un token almacenado.');
-      }
-
-      // Realizar la solicitud HTTP con el token
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Asegúrate de usar el formato correcto
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data;
-      } else {
-        throw Exception('Error al obtener la lista de autos: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: $e');
+    if (response.statusCode == 200) {
+      return json.decode(response.body); // Decodifica la respuesta JSON
+    } else {
+      throw Exception('Error al obtener la lista de carros: ${response.statusCode}');
     }
   }
 }
