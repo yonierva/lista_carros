@@ -1,75 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'car_list.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class QRScanPage extends StatefulWidget {
+class QRScanner extends StatefulWidget {
   @override
-  _QRScanPageState createState() => _QRScanPageState();
+  _QRScannerState createState() => _QRScannerState();
 }
 
-class _QRScanPageState extends State<QRScanPage> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
-  String? qrCodeResult;
+class _QRScannerState extends State<QRScanner> {
+  bool scanned = false;
 
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
+  void handleBarcode(String code) async {
+    if (!scanned) {
+      setState(() {
+        scanned = true;
+      });
+
+      try {
+        final response = await http.get(Uri.parse('https://67f7d1812466325443eadd17.mockapi.io/carros/$code'));
+
+        if (response.statusCode == 200) {
+          final car = jsonDecode(response.body);
+          Navigator.pushNamed(context, '/detail', arguments: car);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Carro no encontrado')),
+          );
+          setState(() {
+            scanned = false;
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al conectar con el servidor')),
+        );
+        setState(() {
+          scanned = false;
+        });
+      }
+    }
   }
-
-  void _onQRViewCreated(QRViewController controller) {
-  this.controller = controller;
-  controller.scannedDataStream.listen((scanData) {
-    setState(() {
-      qrCodeResult = scanData.code;
-    });
-
-    // Detener el escaneo después de obtener un resultado
-    controller.pauseCamera();
-
-    // Mostrar el resultado o realizar alguna acción
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Código QR escaneado: $qrCodeResult')),
-    );
-  });
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Escanear QR o Ver Lista')),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CarList()),
-                    );
-                  },
-                  child: Text('Ver Lista de Carros'),
-                ),
-                if (qrCodeResult != null)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('Resultado del QR: $qrCodeResult'),
-                  ),
-              ],
-            ),
-          ),
-        ],
+      appBar: AppBar(title: Text('Escanear QR')),
+      body: MobileScanner(
+        onDetect: (barcode, args) {
+          if (barcode.rawValue != null) {
+            final code = barcode.rawValue!;
+            if (code.isNotEmpty) {
+              handleBarcode(code);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Código QR inválido')),
+              );
+            }
+          }
+        },
       ),
     );
   }

@@ -1,58 +1,50 @@
 import 'package:flutter/material.dart';
-import '../services/car_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CarList extends StatefulWidget {
   @override
-  _CarListPageState createState() => _CarListPageState();
+  _CarListState createState() => _CarListState();
 }
 
-class _CarListPageState extends State<CarList> {
-  bool _isLoading = true;
-  List<dynamic> _cars = [];
+class _CarListState extends State<CarList> {
+  List cars = [];
+
+  Future<void> fetchCars() async {
+    final response = await http.get(
+      Uri.parse('https://67f7d1812466325443eadd17.mockapi.io/carros'),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        cars = jsonDecode(response.body);
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadCars();
-  }
-
-  void _loadCars() async {
-    try {
-      CarService carService = CarService();
-      final cars = await carService.getCarList(); // Llamada al servicio para obtener la lista de carros
-      setState(() {
-        _cars = cars;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
+    fetchCars();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Listado de Autos')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _cars.length,
-              itemBuilder: (context, index) {
-                final car = _cars[index];
-                return ListTile(
-                  leading: car['imagen'] != null
-                      ? Image.network(car['imagen'], width: 50, height: 50, fit: BoxFit.cover)
-                      : Icon(Icons.directions_car), // Icono predeterminado si no hay imagen
-                  title: Text(car['conductor'] ?? 'Conductor no disponible'),
-                  subtitle: Text(car['placa'] ?? 'Placa no disponible'),
-                );
-              },
+      appBar: AppBar(title: Text('Mis Carros Eléctricos')),
+      body: ListView.builder(
+        itemCount: cars.length,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: EdgeInsets.all(10),
+            child: ListTile(
+              leading: Icon(Icons.electric_car, size: 40),
+              title: Text('Placa: ${cars[index]['placa']}'),
+              subtitle: Text('Conductor: ${cars[index]['conductor']}'),
             ),
+          );
+        },
+      ),
     );
   }
 }
